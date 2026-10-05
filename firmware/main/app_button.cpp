@@ -186,7 +186,10 @@ static void on_press_repeat_done(void *arg, void *)
  * Symptôme observé sur la SuperMini (06/10/2026) : le premier appui marche,
  * puis les appuis ne sont plus vus que si la puce est déjà éveillée pour autre
  * chose (fenêtre active après un appui, poll Thread). On réarme donc EXT1 à
- * chaque retour en basse conso, via le callback prévu par le composant. */
+ * chaque retour en basse conso, via le callback prévu par le composant.
+ *
+ * Signalé à Espressif : https://github.com/espressif/esp-iot-solution/issues/794
+ * À retirer quand une version corrigée du composant sera disponible. */
 static void on_button_enter_power_save(void *)
 {
 #if CONFIG_PM_POWER_DOWN_PERIPHERAL_IN_LIGHT_SLEEP && SOC_PM_SUPPORT_EXT1_WAKEUP
