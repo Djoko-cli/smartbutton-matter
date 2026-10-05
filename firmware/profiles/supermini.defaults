@@ -1,0 +1,16 @@
+# Surcouche CARTE : ESP32-H2 SuperMini.
+#
+# Cette carte n'a pas de quartz 32,768 kHz. Sans cette surcouche, la config de
+# base (EXT_CRYS) ferait retomber ESP-IDF sur le RC interne en silence. On le
+# demande donc explicitement, pour que ce soit visible et assumé.
+#
+# Conséquence : les rendez-vous de poll avec le parent Thread dérivent davantage
+# qu'avec le PCB final. Les mesures de veille faites sur cette carte seront donc
+# un peu pessimistes. Voir docs/03-hardware.md §3.
+#
+# Rappels sur la carte (pas réglables ici) :
+#   - GPIO9 = bouton BOOT (c'est notre bouton en prototype)
+#   - GPIO8 = LED WS2812 adressable : le feedback en GPIO nu n'aura pas d'effet
+#   - LDO, chargeur LiPo et LED : ~488 µA en veille, inutilisable pour mesurer
+
+CONFIG_RTC_CLK_SRC_INT_RC=y

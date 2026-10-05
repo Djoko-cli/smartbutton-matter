@@ -1,0 +1,13 @@
+# Table de partitions — flash 4 MB (ESP32-H2-MINI-1)
+#
+# fctry : Device Attestation Credentials (DAC/PAI/CD) + discriminator + passcode,
+#         générés par esp-matter-mfg-tool. Permet un identifiant unique par
+#         appareil sans recompiler le firmware. Voir docs/03-hardware.md §8.
+#
+# Name,     Type, SubType,  Offset,   Size,   Flags
+nvs,        data, nvs,      0x9000,   0x6000,
+otadata,    data, ota,      0xf000,   0x2000,
+phy_init,   data, phy,      0x11000,  0x1000,
+ota_0,      app,  ota_0,    0x20000,  1900K,
+ota_1,      app,  ota_1,    ,         1900K,
+fctry,      data, nvs,      ,         0x6000,

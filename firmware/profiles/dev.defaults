@@ -1,0 +1,25 @@
+# Surcouche MODE : mise au point (étape 1).
+#
+# But : tout voir en USB, avec le même code et la même logique ICD que la
+# version sleepy. Seuls changent le sommeil, la console et des intervalles plus
+# courts, pour que Maison réagisse vite pendant qu'on teste.
+
+# --- Pas de light sleep --------------------------------------------------
+# Quand la puce dort, la PHY USB s'éteint et la console USB-Serial-JTAG
+# décroche. En dev, le CPU reste éveillé. La radio, elle, continue de se couper
+# entre deux polls : le comportement Thread de l'appareil sleepy est préservé.
+CONFIG_PM_ENABLE=n
+CONFIG_FREERTOS_USE_TICKLESS_IDLE=n
+
+# --- Console sur le port USB-C (entrée + sortie) ------------------------
+CONFIG_ESP_CONSOLE_USB_SERIAL_JTAG=y
+
+# Shell CHIP : `matter onboardingcodes ble`, `matter device factoryreset`,
+# diagnostics. Coûte de la RAM, donc réservé au dev.
+CONFIG_ENABLE_CHIP_SHELL=y
+
+# --- ICD : même mode LIT, intervalles courts ----------------------------
+# En sleepy : check-in toutes les 30 min, slow poll 30 min. Ici, 2 min et 5 s :
+# une lecture ou un réglage depuis Maison aboutit en quelques secondes.
+CONFIG_ICD_IDLE_MODE_INTERVAL_SEC=120
+CONFIG_ICD_SLOW_POLL_INTERVAL_MS=5000

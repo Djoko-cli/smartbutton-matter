@@ -1,0 +1,165 @@
+# ESP32-C6 — Matter over Thread, ICD LIT, light sleep.  ← CIBLE ACTUELLE
+#
+# Base : esp-matter/examples/light/sdkconfig.defaults.c6_thread, dont les blocs
+# BLE / Thread / lwIP / mDNS sont obligatoires pour que ça compile et s'appaire.
+# Les écarts volontaires (économie d'énergie) sont signalés par « ← ».
+#
+# Symboles vérifiés par `./tools/check_sdkconfig.sh`.
+# Voir docs/02-energie.md pour le raisonnement sur les valeurs ICD.
+
+CONFIG_IDF_TARGET="esp32c6"
+
+
+# ========================================================================
+# WiFi — DÉSACTIVÉ. Spécifique au C6 (le H2 n'a pas de radio WiFi).
+# Sans ça, les domaines d'alimentation WiFi restent alimentés en veille pour
+# une radio jamais utilisée.
+# ========================================================================
+CONFIG_ESP_WIFI_ENABLED=n
+CONFIG_ENABLE_WIFI_STATION=n
+
+# ========================================================================
+# BLE — NimBLE OBLIGATOIRE.
+# Avec Bluedroid (le défaut si on active BT_ENABLED seul), connectedhomeip ne
+# compile pas : BLEManagerImpl.cpp appelle ThreadStackManager::
+# OnCHIPoBLEAdvertisingStop qui n'existe que dans le chemin NimBLE.
+# ========================================================================
+CONFIG_BT_ENABLED=y
+CONFIG_BT_NIMBLE_ENABLED=y
+CONFIG_BT_NIMBLE_EXT_ADV=n
+CONFIG_ENABLE_CHIPOBLE=y
+# Note : BT_NIMBLE_HCI_EVT_BUF_SIZE et LIBSODIUM_USE_MBEDTLS_SHA figurent dans
+# les exemples esp-matter mais n'existent plus dans ESP-IDF v5.5.4. Retirés —
+# ils auraient été ignorés en silence. Détectés par ./tools/check_sdkconfig.sh.
+
+# ← L'exemple met =n (pratique pour déboguer). Nous coupons la radio BLE après
+#   l'appairage : laisser l'advertising tourner est l'erreur qui coûte le plus
+#   cher en veille.
+CONFIG_USE_BLE_ONLY_FOR_COMMISSIONING=y
+
+# ========================================================================
+# Thread — Minimal Thread Device
+# ========================================================================
+CONFIG_OPENTHREAD_ENABLED=y
+CONFIG_OPENTHREAD_MTD=y
+CONFIG_OPENTHREAD_SRP_CLIENT=y
+CONFIG_OPENTHREAD_DNS_CLIENT=y
+CONFIG_OPENTHREAD_LOG_LEVEL_DYNAMIC=n
+CONFIG_OPENTHREAD_LOG_LEVEL_NOTE=y
+CONFIG_OPENTHREAD_CLI=n
+
+# Le comportement « sleepy » ne se règle pas ici : il découle de la période de
+# poll pilotée par l'ICD server (ICD_*_POLL_INTERVAL_MS plus bas).
+
+# ← Pas de CSL (Thread 1.2 SSED) : ça sert à recevoir avec une faible latence,
+#   ce dont un bouton n'a pas besoin, et ça coûte cher en réveils.
+CONFIG_OPENTHREAD_CSL_ENABLE=n
+
+# ========================================================================
+# lwIP / mDNS — requis par OpenThread + Matter
+# ========================================================================
+CONFIG_LWIP_IPV6_AUTOCONFIG=n
+CONFIG_LWIP_IPV6_NUM_ADDRESSES=8
+CONFIG_LWIP_MULTICAST_PING=y
+CONFIG_USE_MINIMAL_MDNS=n
+CONFIG_ENABLE_EXTENDED_DISCOVERY=y
+
+CONFIG_SUPPORT_GROUPCAST_CLUSTER=n
+
+# --- Réseau : Thread est 100 % IPv6 -------------------------------------
+# IPv4 et ND6 sont inutiles sur Thread : moins de RAM (l'H2 n'a que 320 Ko).
+CONFIG_LWIP_IPV4=n
+CONFIG_DISABLE_IPV4=y
+CONFIG_LWIP_ND6=n
+CONFIG_MBEDTLS_SSL_PROTO_DTLS=y
+CONFIG_BT_NIMBLE_ENABLE_CONN_REATTEMPT=n
+
+# ========================================================================
+# Matter
+# ========================================================================
+CONFIG_ENABLE_MATTER_OVER_THREAD=y
+
+# ← L'exemple met =y. L'OTA Requestor maintient des abonnements coûteux ;
+#   on met à jour par UART tant qu'on prototype.
+CONFIG_ENABLE_OTA_REQUESTOR=n
+
+# ========================================================================
+# ICD — Intermittently Connected Device, mode Long Idle Time
+#
+# ENABLE_ICD_SERVER dépend de OPENTHREAD_MTD.
+# ENABLE_ICD_LIT « select » automatiquement CIP et USER_ACTIVE_MODE_TRIGGER ;
+# ils sont répétés ici pour documenter l'intention.
+# ========================================================================
+CONFIG_ENABLE_ICD_SERVER=y
+CONFIG_ENABLE_ICD_LIT=y
+CONFIG_ENABLE_ICD_CIP=y
+CONFIG_ENABLE_ICD_USER_ACTIVE_MODE_TRIGGER=y
+CONFIG_ENABLE_ICD_DSLS=y
+
+# Réveil de maintien. Défaut esp-matter : 2 s (!). 1800 s = 30 min : au-delà,
+# le gain devient nul car le plancher de veille domine
+# (cf. `python3 tools/power_budget.py`).
+CONFIG_ICD_IDLE_MODE_INTERVAL_SEC=1800
+
+# Durée pendant laquelle la radio reste allumée après un réveil (défaut 300 ms).
+# C'est le poste dominant de chaque cycle : ne pas l'allonger sans mesurer.
+CONFIG_ICD_ACTIVE_MODE_INTERVAL_MS=1000
+CONFIG_ICD_ACTIVE_MODE_THRESHOLD_MS=5000
+
+# Poll rapide en mode actif, poll lent en veille (le lent peut égaler
+# l'intervalle de mode idle).
+CONFIG_ICD_FAST_POLL_INTERVAL_MS=500
+CONFIG_ICD_SLOW_POLL_INTERVAL_MS=1800000
+
+# Repli SIT tant qu'aucun client n'est enregistré.
+CONFIG_ICD_SHORT_IDLE_MODE_DURATION_SEC=60
+
+CONFIG_ICD_CLIENTS_SUPPORTED_PER_FABRIC=2
+CONFIG_ICD_REPORT_ON_ACTIVE_MODE=n
+
+# ========================================================================
+# Gestion d'énergie — light sleep automatique
+# ========================================================================
+CONFIG_PM_ENABLE=y
+CONFIG_FREERTOS_USE_TICKLESS_IDLE=y
+CONFIG_PM_POWER_DOWN_CPU_IN_LIGHT_SLEEP=y
+CONFIG_PM_SLP_IRAM_OPT=y
+CONFIG_PM_RTOS_IDLE_OPT=y
+CONFIG_PM_SLP_DISABLE_GPIO=y
+CONFIG_ESP_PHY_MAC_BB_PD=y
+CONFIG_ESP_SLEEP_POWER_DOWN_FLASH=y
+CONFIG_ESP_SLEEP_GPIO_RESET_WORKAROUND=y
+
+# Quartz 32,768 kHz EXTERNE : le RC interne dérive trop pour tenir les
+# rendez-vous avec le parent Thread. Voir docs/03-hardware.md §3.
+#
+# ⚠️ La plupart des cartes « SuperMini » n'ont PAS ce quartz. Sur une carte qui
+#    en est dépourvue, ESP-IDF retombe sur le RC interne — silencieusement.
+#    Commenter ces deux lignes pour prototyper sur ce type de carte.
+CONFIG_RTC_CLK_SRC_EXT_CRYS=y
+CONFIG_RTC_CLK_CAL_CYCLES=1024
+
+CONFIG_FREERTOS_HZ=1000
+
+# --- Veille de la radio et des périphériques (repris d'esp-matter icd_app) ---
+# Sans IEEE802154_SLEEP_ENABLE, le module 802.15.4 reste alimenté pendant le
+# light sleep (défaut : n). Même logique pour le contrôleur BLE.
+CONFIG_IEEE802154_SLEEP_ENABLE=y
+CONFIG_BT_LE_SLEEP_ENABLE=y
+# Horloge basse conso du BLE prise sur le quartz principal : marche avec ou
+# sans quartz 32 kHz (SuperMini comme PCB).
+CONFIG_BT_LE_LP_CLK_SRC_MAIN_XTAL=y
+CONFIG_PM_POWER_DOWN_PERIPHERAL_IN_LIGHT_SLEEP=y
+
+# ========================================================================
+# Radio
+# ========================================================================
+# +8 dBm suffit à quelques mètres d'un routeur Thread et divise le pic de
+# courant par ~4 — décisif pour une pile bouton. Voir docs/03-hardware.md §2.
+CONFIG_ESP_PHY_MAX_TX_POWER=8
+
+# ========================================================================
+# Console — à couper pour les mesures de consommation
+# ========================================================================
+CONFIG_ESP_CONSOLE_UART_DEFAULT=y
+CONFIG_ENABLE_CHIP_SHELL=n

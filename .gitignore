@@ -1,0 +1,12 @@
+firmware/build/
+firmware/sdkconfig
+firmware/sdkconfig.old
+firmware/managed_components/
+firmware/dependencies.lock
+
+mechanical/stl/*.stl
+*.bak
+.DS_Store
+__pycache__/
+firmware/build-*/
+firmware/sdkconfig [0-9]*

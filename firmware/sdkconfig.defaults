@@ -1,0 +1,43 @@
+# Réglages communs (tous targets).
+#
+# Chaque symbole de ce fichier a été vérifié contre les Kconfig réels par
+# `./tools/check_sdkconfig.sh`. Relancer ce script après toute mise à jour
+# d'ESP-IDF ou d'esp-matter : un symbole inconnu est ignoré SILENCIEUSEMENT.
+
+CONFIG_PARTITION_TABLE_CUSTOM=y
+CONFIG_PARTITION_TABLE_CUSTOM_FILENAME="partitions.csv"
+CONFIG_PARTITION_TABLE_OFFSET=0x8000
+
+CONFIG_ESPTOOLPY_FLASHSIZE_4MB=y
+CONFIG_ESPTOOLPY_FLASHSIZE="4MB"
+
+# --- Crypto -------------------------------------------------------------
+# Sans HKDF, le link échoue sur `undefined reference to mbedtls_hkdf`
+# (CHIPCryptoPALmbedTLS.cpp). Non optionnel.
+CONFIG_MBEDTLS_HKDF_C=y
+
+# --- lwIP : hooks de routage requis par OpenThread ----------------------
+CONFIG_LWIP_HOOK_IP6_ROUTE_DEFAULT=y
+CONFIG_LWIP_HOOK_ND6_GET_GW_DEFAULT=y
+
+# --- Identité produit ---------------------------------------------------
+# Mode TEST, comme le pont BenQ : certificats de test du SDK (VID 0xFFF1 /
+# PID 0x8000) et code d'appairage de test (20202021, discriminateur 3840).
+# Apple Home accepte avec l'avertissement « accessoire non certifié ».
+#
+# NE PAS activer le factory data provider tant que la partition fctry n'a pas
+# été remplie (esp-matter-mfg-tool) : l'appareil y chercherait ses certificats
+# et son code d'appairage, la trouverait vide, et le commissioning échouerait.
+CONFIG_ENABLE_ESP32_FACTORY_DATA_PROVIDER=n
+CONFIG_ENABLE_ESP32_DEVICE_INSTANCE_INFO_PROVIDER=n
+CONFIG_EXAMPLE_DAC_PROVIDER=y
+
+# --- Logs ---------------------------------------------------------------
+# Passer CHIP_LOG_DEFAULT_LEVEL_NONE + LOG_DEFAULT_LEVEL_NONE pour les mesures
+# de conso : l'UART maintient des horloges actives et empêche le light sleep.
+CONFIG_LOG_DEFAULT_LEVEL_INFO=y
+CONFIG_CHIP_LOG_DEFAULT_LEVEL_PROGRESS=y
+
+# --- Taille ---------------------------------------------------------------
+CONFIG_COMPILER_OPTIMIZATION_SIZE=y
+CONFIG_ENABLE_CHIP_SHELL=n
