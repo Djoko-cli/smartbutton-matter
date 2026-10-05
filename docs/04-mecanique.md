@@ -1,4 +1,4 @@
-# Mécanique — clone du Hue Smart Button
+# Mécanique — boîtier inspiré du Hue Smart Button
 
 ## 1. Le format d'origine
 
@@ -48,7 +48,7 @@ Un aimant néodyme et une plaque métallique directement sous une antenne PCB d�
 
 ### b) Le ressenti du clic
 
-C'est ce qui fait la différence entre un clone et un jouet. Le capot doit transmettre l'appui au switch **sans jeu et sans point dur** :
+C'est ce qui fait la différence entre un objet abouti et un jouet. Le capot doit transmettre l'appui au switch **sans jeu et sans point dur** :
 
 - Nervures flexibles (living hinge) moulées dans le capot plutôt qu'un guidage à coulisse — moins de friction, pas de blocage en biais.
 - Un plot central rigide aligné à ±0,3 mm sur le switch. Un désalignement produit un clic mou sur les bords.

@@ -1,6 +1,6 @@
 # SmartButton
 
-Clone du **Philips Hue Smart Button**, en **Matter over Thread**, sur ESP32-H2 (le C6 reste une cible secondaire), pile CR2450.
+Bouton connecté **Matter over Thread** inspiré du **Philips Hue Smart Button**, sur ESP32-H2 (le C6 reste une cible secondaire), pile CR2450.
 
 ```
 docs/     01-architecture · 02-energie · 03-hardware · 04-mecanique
@@ -139,3 +139,7 @@ Le firmware relève donc le child timeout à 3600 s au démarrage. Détail et ta
 Tout est calé sur les sources installées, vérifié et non écrit de mémoire : ESP-IDF v5.5.4, esp-matter, `espressif/button` v4.2.0.
 
 Le firmware n'a **jamais tourné sur du matériel**. Restent à valider : les gestes dans l'app Maison, l'acceptation du child timeout par les border routers Apple, la latence du premier appui après une longue veille, et la consommation réelle.
+
+## Licence
+
+[MIT](LICENSE). « Philips » et « Hue » sont des marques de Signify : ce projet indépendant n'y est pas affilié et ne reproduit ni leur nom ni leurs logos sur le produit.

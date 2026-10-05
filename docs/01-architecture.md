@@ -1,4 +1,4 @@
-# Architecture — SmartButton (clone Hue Smart Button, Matter over Thread)
+# Architecture — SmartButton (inspiré du Hue Smart Button, Matter over Thread)
 
 ## 1. Décisions de stack
 
