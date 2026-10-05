@@ -138,7 +138,13 @@ Le firmware relève donc le child timeout à 3600 s au démarrage. Détail et ta
 
 Tout est calé sur les sources installées, vérifié et non écrit de mémoire : ESP-IDF v5.5.4, esp-matter, `espressif/button` v4.2.0.
 
-Le firmware n'a **jamais tourné sur du matériel**. Restent à valider : les gestes dans l'app Maison, l'acceptation du child timeout par les border routers Apple, la latence du premier appui après une longue veille, et la consommation réelle.
+**Validé sur matériel** (ESP32-H2 SuperMini, octobre 2026) : appairage dans Apple Home, pression simple, double et appui long, **y compris en profil `sleepy`** avec light sleep, après plusieurs minutes de veille profonde.
+
+Deux défauts trouvés et corrigés pendant ces essais :
+- **le composant `espressif/button` (4.2.0, et toujours sur master) désarme le réveil EXT1 après le premier appui** quand les périphériques sont éteints en veille (`PM_POWER_DOWN_PERIPHERAL_IN_LIGHT_SLEEP`). Le bouton ne réveillait alors plus la puce. Contourné dans `app_button.cpp` en réarmant EXT1 à chaque retour en basse conso ;
+- la fenêtre de double pression (180 ms) était trop courte à l'usage : elle passe à 300 ms.
+
+Restent à valider : la consommation réelle (PPK2), et l'autonomie qui en découle en mode SIT (Apple n'active pas le LIT, voir `docs/02-energie.md` §2 ter).
 
 ## Licence
 

@@ -19,6 +19,9 @@
 #include <freertos/FreeRTOS.h>
 #include <freertos/timers.h>
 
+#include <esp_sleep.h>
+#include <soc/soc_caps.h>
+
 #include <iot_button.h>
 #include <button_gpio.h>
 
@@ -168,6 +171,34 @@ static void on_press_repeat_done(void *arg, void *)
     });
 }
 
+/* --- Réveil du bouton en light sleep --------------------------------------
+ *
+ * Contournement d'un défaut du composant espressif/button (constaté en 4.2.0,
+ * toujours présent sur master en octobre 2026), qui ne se manifeste qu'avec
+ * CONFIG_PM_POWER_DOWN_PERIPHERAL_IN_LIGHT_SLEEP :
+ *
+ *   - à l'init, il arme le réveil EXT1 sur la broche (seul réveil effectif
+ *     quand les périphériques sont éteints pendant le light sleep) ;
+ *   - en sortant de son mode basse conso après un appui, il le DÉSARME
+ *     (button_gpio_enable_gpio_wakeup, branche disable) ;
+ *   - en y revenant, il ne réarme que le réveil GPIO, inopérant dans ce mode.
+ *
+ * Symptôme observé sur la SuperMini (06/10/2026) : le premier appui marche,
+ * puis les appuis ne sont plus vus que si la puce est déjà éveillée pour autre
+ * chose (fenêtre active après un appui, poll Thread). On réarme donc EXT1 à
+ * chaque retour en basse conso, via le callback prévu par le composant. */
+static void on_button_enter_power_save(void *)
+{
+#if CONFIG_PM_POWER_DOWN_PERIPHERAL_IN_LIGHT_SLEEP && SOC_PM_SUPPORT_EXT1_WAKEUP
+    esp_err_t err = esp_sleep_enable_ext1_wakeup_io(
+        1ULL << APP_BUTTON_GPIO,
+        APP_BUTTON_ACTIVE_LEVEL ? ESP_EXT1_WAKEUP_ANY_HIGH : ESP_EXT1_WAKEUP_ANY_LOW);
+    if (err != ESP_OK) {
+        ESP_LOGE(TAG, "réarmement du réveil EXT1 : %s", esp_err_to_name(err));
+    }
+#endif
+}
+
 /* --- Gestes système ----------------------------------------------------- */
 
 static void on_hold_commission(void *, void *)
@@ -216,6 +247,14 @@ esp_err_t app_button_init(void)
     esp_err_t err = iot_button_new_gpio_device(&btn_cfg, &gpio_cfg, &s_btn);
     if (err != ESP_OK) {
         ESP_LOGE(TAG, "iot_button_new_gpio_device: %s", esp_err_to_name(err));
+        return err;
+    }
+
+    button_power_save_config_t ps_cfg = {};
+    ps_cfg.enter_power_save_cb = on_button_enter_power_save;
+    err = iot_button_register_power_save_cb(&ps_cfg);
+    if (err != ESP_OK) {
+        ESP_LOGE(TAG, "iot_button_register_power_save_cb: %s", esp_err_to_name(err));
         return err;
     }
 
