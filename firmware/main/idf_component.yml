@@ -1,4 +1,6 @@
 dependencies:
   espressif/button: "^4"
+  # WS2812 de la carte SuperMini (CONFIG_APP_LED_WS2812_WHITE)
+  espressif/led_strip: "^3"
   idf:
     version: ">=5.2"

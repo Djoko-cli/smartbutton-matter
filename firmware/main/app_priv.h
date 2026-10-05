@@ -1,6 +1,7 @@
 #pragma once
 
 #include <esp_err.h>
+#include "sdkconfig.h"
 #include <stdint.h>
 
 /* ------------------------------------------------------------------------ */
@@ -17,9 +18,8 @@
 #define APP_BUTTON_GPIO         GPIO_NUM_9
 #define APP_BUTTON_ACTIVE_LEVEL 0
 
-/* LED de feedback. Éteinte en veille — voir docs/03-hardware.md §5.
- * GPIO8 = LED RGB sur beaucoup de devkits C6 : à adapter selon ta carte. */
-#define APP_LED_GPIO            GPIO_NUM_8
+/* LED : type et GPIO réglés dans menuconfig > SmartButton (Kconfig.projbuild).
+ * Niveau actif de la LED simple du PCB final : */
 #define APP_LED_ACTIVE_LEVEL    1
 
 /* ------------------------------------------------------------------------ */
@@ -69,5 +69,6 @@ extern uint16_t g_switch_endpoint_id;
 /* Initialise le bouton et la LED. À appeler après esp_matter::start(). */
 esp_err_t app_button_init(void);
 
-/* Flash court de la LED de feedback (non bloquant). */
+/* LED (app_led.cpp). app_led_blink est sans effet hors LED simple. */
+esp_err_t app_led_init(void);
 void app_led_blink(uint32_t on_ms);

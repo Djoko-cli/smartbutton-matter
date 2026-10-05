@@ -21,6 +21,7 @@ echo "Indexation des Kconfig…"
   find "$IDF_PATH/components" \
        "$ESP_MATTER_PATH/components" \
        "$ESP_MATTER_PATH/device_hal" \
+       "$HERE/firmware/main" \
        "$ESP_MATTER_PATH/connectedhomeip/connectedhomeip/config/esp32" \
        -name 'Kconfig*' -type f -print0 2>/dev/null; } \
   | xargs -0 grep -hoE '^[[:space:]]*(menu)?config[[:space:]]+[A-Z0-9_]+' 2>/dev/null \

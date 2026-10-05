@@ -40,7 +40,6 @@ using namespace esp_matter::cluster;
 using namespace chip::app::Clusters;
 
 static button_handle_t s_btn = nullptr;
-static TimerHandle_t s_led_timer = nullptr;
 
 /* Un appui long déclenche aussi BUTTON_PRESS_UP au relâchement : ce drapeau
  * choisit entre LongRelease et ShortRelease. */
@@ -48,22 +47,6 @@ static bool s_long_press_active = false;
 
 static constexpr uint8_t kIdlePosition = 0;
 static constexpr uint8_t kPressedPosition = 1;
-
-/* ------------------------------------------------------------------------ */
-/* LED                                                                       */
-/* ------------------------------------------------------------------------ */
-
-static void led_off_cb(TimerHandle_t)
-{
-    gpio_set_level(APP_LED_GPIO, !APP_LED_ACTIVE_LEVEL);
-}
-
-void app_led_blink(uint32_t on_ms)
-{
-    gpio_set_level(APP_LED_GPIO, APP_LED_ACTIVE_LEVEL);
-    xTimerChangePeriod(s_led_timer, pdMS_TO_TICKS(on_ms), 0);
-    xTimerStart(s_led_timer, 0);
-}
 
 /* ------------------------------------------------------------------------ */
 /* Helpers Matter                                                            */
@@ -213,15 +196,10 @@ static void on_hold_factory_reset(void *, void *)
 
 esp_err_t app_button_init(void)
 {
-    gpio_config_t led_cfg = {};
-    led_cfg.pin_bit_mask = 1ULL << APP_LED_GPIO;
-    led_cfg.mode = GPIO_MODE_OUTPUT;
-    ESP_ERROR_CHECK(gpio_config(&led_cfg));
-    gpio_set_level(APP_LED_GPIO, !APP_LED_ACTIVE_LEVEL);
-
-    s_led_timer = xTimerCreate("led", pdMS_TO_TICKS(50), pdFALSE, nullptr, led_off_cb);
-    if (s_led_timer == nullptr) {
-        return ESP_ERR_NO_MEM;
+    esp_err_t led_err = app_led_init();
+    if (led_err != ESP_OK) {
+        /* Une LED en panne ne doit pas empêcher le bouton de fonctionner. */
+        ESP_LOGW(TAG, "LED indisponible : %s", esp_err_to_name(led_err));
     }
 
     button_config_t btn_cfg = {};

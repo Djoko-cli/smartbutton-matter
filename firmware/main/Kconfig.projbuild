@@ -1,0 +1,34 @@
+menu "SmartButton"
+
+    choice APP_LED_MODE
+        prompt "LED de l'appareil"
+        default APP_LED_SIMPLE
+        help
+            Le PCB final a une LED simple, qui ne s'allume que brièvement à
+            chaque appui. La carte de dev ESP32-H2 SuperMini a, à la place, une
+            LED adressable WS2812 sur GPIO8 : elle ne se pilote pas en GPIO nu,
+            et un « flash » GPIO enverrait du bruit sur sa ligne de données.
+
+        config APP_LED_SIMPLE
+            bool "LED simple (PCB final) : flash bref à chaque appui"
+        config APP_LED_WS2812_WHITE
+            bool "LED adressable WS2812 (SuperMini) : blanc fixe"
+        config APP_LED_NONE
+            bool "Aucune LED"
+    endchoice
+
+    config APP_LED_GPIO
+        int "GPIO de la LED"
+        depends on !APP_LED_NONE
+        default 8
+
+    config APP_LED_WS2812_LEVEL
+        int "Intensité du blanc (1-255)"
+        depends on APP_LED_WS2812_WHITE
+        range 1 255
+        default 24
+        help
+            24/255 donne un blanc bien visible pour ~4 mA. Pleine intensité :
+            jusqu'à ~60 mA, inutile et chaud.
+
+endmenu

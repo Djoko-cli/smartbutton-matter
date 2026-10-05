@@ -14,3 +14,8 @@
 #   - LDO, chargeur LiPo et LED : ~488 µA en veille, inutilisable pour mesurer
 
 CONFIG_RTC_CLK_SRC_INT_RC=y
+
+# LED : la WS2812 de la carte en blanc fixe (pas de flash GPIO sur sa ligne de
+# données). Voir firmware/main/Kconfig.projbuild.
+CONFIG_APP_LED_WS2812_WHITE=y
+CONFIG_APP_LED_GPIO=8
