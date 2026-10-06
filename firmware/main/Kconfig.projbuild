@@ -31,4 +31,53 @@ menu "SmartButton"
             24/255 donne un blanc bien visible pour ~4 mA. Pleine intensité :
             jusqu'à ~60 mA, inutile et chaud.
 
+    menu "Pile"
+
+        choice APP_BATTERY_SOURCE
+            prompt "Source de la mesure de tension"
+            default APP_BATTERY_SIMULATED
+            help
+                La SuperMini est alimentée en USB : il n'y a pas de pile à mesurer,
+                on simule une tension pour développer la chaîne jusqu'à Maison.
+                Le PCB final mesurera la pile via l'ADC, à travers un pont diviseur.
+
+            config APP_BATTERY_SIMULATED
+                bool "Tension simulée (carte de dev)"
+            config APP_BATTERY_ADC
+                bool "Mesure ADC à travers un pont diviseur (PCB final)"
+        endchoice
+
+        config APP_BATTERY_SIM_MV
+            int "Tension simulée (mV)"
+            depends on APP_BATTERY_SIMULATED
+            range 1800 3300
+            default 2850
+            help
+                2850 mV correspond à une CR2450 entamée (~80 %). Descendre sous
+                2500 mV pour tester l'alerte « pile faible » dans Maison.
+
+        config APP_BATTERY_ADC_GPIO
+            int "GPIO de mesure"
+            depends on APP_BATTERY_ADC
+            default 1
+
+        config APP_BATTERY_DIVIDER_X1000
+            int "Rapport du pont diviseur x1000 (Vpile / Vadc)"
+            depends on APP_BATTERY_ADC
+            range 1000 10000
+            default 2000
+            help
+                2000 = pont 1:2 (deux résistances égales).
+
+        config APP_BATTERY_PERIOD_MIN
+            int "Période de mesure (minutes)"
+            range 1 1440
+            default 360
+            help
+                Une mesure réveille la puce et peut déclencher un rapport radio
+                si la valeur change : toutes les 6 h, c'est négligeable dans le
+                budget énergie (docs/02-energie.md).
+
+    endmenu
+
 endmenu

@@ -69,6 +69,10 @@ extern uint16_t g_switch_endpoint_id;
 /* Initialise le bouton et la LED. À appeler après esp_matter::start(). */
 esp_err_t app_button_init(void);
 
+/* Pile (app_battery.cpp) : mesure périodique publiée dans le cluster Power
+ * Source de l'endpoint donné. À appeler après esp_matter::start(). */
+esp_err_t app_battery_init(uint16_t endpoint_id);
+
 /* LED (app_led.cpp). app_led_blink est sans effet hors LED simple. */
 esp_err_t app_led_init(void);
 void app_led_blink(uint32_t on_ms);

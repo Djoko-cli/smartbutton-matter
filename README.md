@@ -144,6 +144,8 @@ Deux défauts trouvés et corrigés pendant ces essais :
 - **le composant `espressif/button` (4.2.0, et toujours sur master) désarme le réveil EXT1 après le premier appui** quand les périphériques sont éteints en veille (`PM_POWER_DOWN_PERIPHERAL_IN_LIGHT_SLEEP`). Le bouton ne réveillait alors plus la puce. Contourné dans `app_button.cpp` en réarmant EXT1 à chaque retour en basse conso ;
 - la fenêtre de double pression (180 ms) était trop courte à l'usage : elle passe à 300 ms.
 
+**Niveau de pile dans Maison** : cluster Power Source (features Battery et Replaceable) sur l'endpoint du bouton. Maison affiche le pourcentage sans réappairage. Sur la SuperMini la tension est simulée (`CONFIG_APP_BATTERY_SIM_MV`) ; la mesure ADC du PCB final est écrite mais pas encore testée sur matériel. La courbe tension → pourcentage de la CR2450 est approximative, à recaler sur une décharge mesurée.
+
 Restent à valider : la consommation réelle (PPK2), et l'autonomie qui en découle en mode SIT (Apple n'active pas le LIT, voir `docs/02-energie.md` §2 ter).
 
 ## Licence

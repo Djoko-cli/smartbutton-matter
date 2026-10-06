@@ -20,6 +20,7 @@
 #include <esp_matter_console.h>
 
 #include <common_macros.h>
+#include <string.h>
 
 #if CHIP_DEVICE_CONFIG_ENABLE_THREAD
 #include <platform/ESP32/OpenthreadLauncher.h>
@@ -202,6 +203,39 @@ extern "C" void app_main()
     msm.multi_press_max = APP_MULTI_PRESS_MAX;
     cluster::switch_cluster::feature::momentary_switch_multi_press::add(sw, &msm);
 
+    /* --- Pile : cluster Power Source sur l'endpoint du bouton ---
+     *
+     * Feature Battery : Maison affiche le pourcentage et alerte quand la pile
+     * faiblit. Feature Replaceable : pile CR2450 remplaçable par l'utilisateur.
+     * Les valeurs sont publiées par app_battery.cpp. */
+    endpoint::power_source::config_t ps_config;
+    cluster::power_source::config_t &ps = ps_config.power_source;
+    ps.status = chip::to_underlying(PowerSource::PowerSourceStatusEnum::kActive);
+    ps.order = 0;
+    strncpy(ps.description, "Pile CR2450", sizeof(ps.description) - 1);
+    ps.feature_flags = cluster::power_source::feature::battery::get_id() |
+                       cluster::power_source::feature::replaceable::get_id();
+    ps.features.battery.bat_charge_level = chip::to_underlying(PowerSource::BatChargeLevelEnum::kOk);
+    ps.features.battery.bat_replacement_needed = false;
+    ps.features.battery.bat_replaceability =
+        chip::to_underlying(PowerSource::BatReplaceabilityEnum::kUserReplaceable);
+    ps.features.replaceable.bat_quantity = 1;
+    strncpy(ps.features.replaceable.bat_replacement_description, "CR2450",
+            sizeof(ps.features.replaceable.bat_replacement_description) - 1);
+    ABORT_APP_ON_FAILURE(endpoint::power_source::add(ep, &ps_config) == ESP_OK,
+                         ESP_LOGE(TAG, "ajout du Power Source échoué"));
+
+    /* Attributs optionnels : pourcentage et tension. Nuls jusqu'à la
+     * première mesure. */
+    cluster_t *ps_cluster = cluster::get(ep, PowerSource::Id);
+    ABORT_APP_ON_FAILURE(ps_cluster != nullptr, ESP_LOGE(TAG, "cluster Power Source introuvable"));
+    /* Signature « legacy » avec bornes : pourcentage en demi-pourcents (0-200),
+     * tension en mV. */
+    cluster::power_source::attribute::create_bat_percent_remaining(
+        ps_cluster, nullable<uint8_t>(), nullable<uint8_t>(0), nullable<uint8_t>(200));
+    cluster::power_source::attribute::create_bat_voltage(
+        ps_cluster, nullable<uint32_t>(), nullable<uint32_t>(0), nullable<uint32_t>(5000));
+
 #if CHIP_DEVICE_CONFIG_ENABLE_THREAD
     esp_openthread_platform_config_t ot_config = {
         .radio_config = ESP_OPENTHREAD_DEFAULT_RADIO_CONFIG(),
@@ -223,6 +257,12 @@ extern "C" void app_main()
 #endif
 
     ESP_ERROR_CHECK(app_button_init());
+
+    esp_err_t bat_err = app_battery_init(g_switch_endpoint_id);
+    if (bat_err != ESP_OK) {
+        /* Sans mesure de pile, le bouton reste utilisable. */
+        ESP_LOGE(TAG, "mesure de pile indisponible : %s", esp_err_to_name(bat_err));
+    }
 
     ESP_LOGI(TAG, "prêt");
 }
