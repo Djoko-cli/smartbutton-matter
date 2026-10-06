@@ -3,10 +3,11 @@
 Bouton connecté **Matter over Thread** inspiré du **Philips Hue Smart Button**, sur ESP32-H2 (le C6 reste une cible secondaire), pile CR2450.
 
 ```
-docs/     01-architecture · 02-energie · 03-hardware · 04-mecanique
+docs/     01-architecture · 02-energie · 03-hardware · 04-mecanique · 05-mesure
 firmware/ ESP-IDF + esp-matter, Generic Switch, ICD LIT
 tools/    power_budget.py     — modèle d'autonomie paramétrable
           check_sdkconfig.sh  — valide les symboles Kconfig (voir plus bas)
+          ppk2_analyze.py     — analyse un export CSV du PPK2 (plancher, charge par poll, autonomie)
 ```
 
 ---
@@ -70,6 +71,7 @@ La cible est l'**ESP32-H2**. La configuration se superpose en couches :
 |---|---|---|
 | `dev` | base + `profiles/supermini.defaults` + `profiles/dev.defaults` | Étape 1 : pas de veille, console et shell CHIP sur l'USB-C, ICD aux intervalles courts |
 | `sleepy` | base + `profiles/supermini.defaults` | Étapes 2-3 : vrai profil ICD LIT + light sleep, logs via adaptateur UART |
+| `measure` | `sleepy` + `profiles/measure.defaults` | Étape 3 : mesure au PPK2, sans logs, console, USB ni LED ([docs/05-mesure.md](docs/05-mesure.md)) |
 | `pcb` | base seule | PCB final, avec quartz 32 kHz |
 
 Chaque profil a son dossier `firmware/build-<profil>-<cible>/` : passer de l'un à l'autre ne recompile pas tout.

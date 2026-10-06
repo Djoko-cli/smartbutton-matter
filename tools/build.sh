@@ -11,7 +11,8 @@
 #
 # Profils :
 #   dev     SuperMini, pas de veille, console USB, ICD rapide   (étape 1)
-#   sleepy  SuperMini, vrai profil ICD LIT + light sleep        (étapes 2-3)
+#   sleepy  SuperMini, vrai profil ICD LIT + light sleep        (étape 2)
+#   measure sleepy sans logs, console, USB ni LED : mesure PPK2  (étape 3)
 #   pcb     config de base seule (quartz 32 kHz externe)        (PCB final)
 set -euo pipefail
 
@@ -23,8 +24,9 @@ TARGET="${TARGET:-esp32h2}"
 case "$PROFILE" in
     dev)    DEFAULTS="sdkconfig.defaults;profiles/supermini.defaults;profiles/dev.defaults" ;;
     sleepy) DEFAULTS="sdkconfig.defaults;profiles/supermini.defaults" ;;
+    measure) DEFAULTS="sdkconfig.defaults;profiles/supermini.defaults;profiles/measure.defaults" ;;
     pcb)    DEFAULTS="sdkconfig.defaults" ;;
-    *)      sed -n '3,18p' "${BASH_SOURCE[0]}" | sed 's/^# \{0,1\}//'; exit 2 ;;
+    *)      sed -n '3,19p' "${BASH_SOURCE[0]}" | sed 's/^# \{0,1\}//'; exit 2 ;;
 esac
 # ESP-IDF ajoute de lui-même sdkconfig.defaults.<cible> après sdkconfig.defaults.
 

@@ -1,0 +1,24 @@
+# Surcouche MODE : mesure de consommation au PPK2 (docs/05-mesure.md).
+#
+# But : que le PPK2 mesure le produit, pas l'outillage. S'empile sur
+# supermini.defaults ; le reste (ICD, light sleep, radio) est celui de sleepy.
+
+# --- Aucun log, aucune console -------------------------------------------
+# Chaque ligne de log garde le CPU éveillé le temps de l'envoyer à 115 200
+# bauds (~1 ms pour 100 caractères) : invisible en usage, mais faux dans une
+# mesure de charge par poll.
+CONFIG_LOG_DEFAULT_LEVEL_NONE=y
+CONFIG_BOOTLOADER_LOG_LEVEL_NONE=y
+CONFIG_CHIP_LOG_DEFAULT_LEVEL_NONE=y
+CONFIG_OPENTHREAD_LOG_LEVEL_NONE=y
+CONFIG_ESP_CONSOLE_NONE=y
+CONFIG_ESP_CONSOLE_SECONDARY_NONE=y
+
+# --- Module USB-Serial-JTAG désactivé ------------------------------------
+# Inutile pendant la mesure (la carte est alimentée par le PPK2, pas par
+# l'USB). Le flash reste possible en mode téléchargement : BOOT maintenu, RST.
+CONFIG_USJ_ENABLE_USB_SERIAL_JTAG=n
+
+# --- Pas de LED -----------------------------------------------------------
+# La WS2812 en blanc fixe tire ~4 mA : 100 fois le budget de veille.
+CONFIG_APP_LED_NONE=y
