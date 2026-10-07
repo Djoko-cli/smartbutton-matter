@@ -12,6 +12,8 @@
 #   - GPIO9 = bouton BOOT (c'est notre bouton en prototype)
 #   - GPIO8 = LED WS2812 adressable : le feedback en GPIO nu n'aura pas d'effet
 #   - LDO, chargeur LiPo et LED : ~488 µA en veille, inutilisable pour mesurer
+#   - PAS de quartz 32,768 kHz : vérifié le 08/10/2026 (log de boot,
+#     "32 kHz clock not found"). GPIO13/14 sont libres.
 
 CONFIG_RTC_CLK_SRC_INT_RC=y
 
@@ -19,3 +21,10 @@ CONFIG_RTC_CLK_SRC_INT_RC=y
 # données). Voir firmware/main/Kconfig.projbuild.
 CONFIG_APP_LED_WS2812_WHITE=y
 CONFIG_APP_LED_GPIO=8
+
+# USB et flash : en profil sleepy, la puce coupe son USB dès sa première mise
+# en veille. Pour la flasher, il faut le mode téléchargement (BOOT maintenu,
+# RST, BOOT relâché), ou repasser par le profil dev, qui ne dort pas.
+# CONFIG_USJ_NO_AUTO_LS_ON_CONNECTION a été essayée le 08/10/2026 et ne marche
+# pas ici : après la première veille, chaque réveil est trop bref pour que le
+# Mac réénumère la carte, donc elle ne voit jamais d'hôte USB et se rendort.

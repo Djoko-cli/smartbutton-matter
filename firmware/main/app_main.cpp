@@ -15,6 +15,7 @@
 #include <esp_log.h>
 #include <nvs_flash.h>
 #include <esp_pm.h>
+#include <soc/rtc.h>
 
 #include <esp_matter.h>
 #include <esp_matter_console.h>
@@ -130,6 +131,23 @@ static void app_enable_light_sleep(void)
 #endif
 }
 
+/* Diagnostic : horloge de veille réellement utilisée. Si le quartz 32 kHz
+ * demandé (CONFIG_RTC_CLK_SRC_EXT_CRYS) est absent, ESP-IDF retombe sur son
+ * oscillateur RC interne avec un seul avertissement très tôt au démarrage,
+ * facile à rater. Or le RC dérive : les rendez-vous de poll (et a fortiori le
+ * CSL) sont moins précis, donc plus coûteux. */
+static void app_log_slow_clock(void)
+{
+    const bool xtal = rtc_clk_slow_src_get() == SOC_RTC_SLOW_CLK_SRC_XTAL32K;
+#if CONFIG_RTC_CLK_SRC_EXT_CRYS
+    if (!xtal) {
+        ESP_LOGW(TAG, "horloge lente : quartz 32 kHz demandé mais ABSENT, RC interne utilisé");
+        return;
+    }
+#endif
+    ESP_LOGI(TAG, "horloge lente : %s", xtal ? "quartz 32 kHz externe" : "oscillateur RC interne");
+}
+
 static esp_err_t app_identification_cb(identification::callback_type_t type,
                                        uint16_t endpoint_id, uint8_t effect_id,
                                        uint8_t effect_variant, void *)
@@ -161,6 +179,7 @@ extern "C" void app_main()
     ESP_ERROR_CHECK(err);
 
     app_enable_light_sleep();
+    app_log_slow_clock();
 
     /* --- Arbre d'objets Matter --- */
 
