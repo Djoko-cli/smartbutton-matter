@@ -42,7 +42,7 @@ Autonomies modélisées (`python3 tools/power_budget.py`) :
 
 Le modèle est calé sur des mesures PPK2 publiées : à 30 s de poll il prédit 232 µA sur C6 (231 mesurés) et 198 µA sur H2 (191 mesurés).
 
-**Configuration retenue : ESP32-H2 + CR2450.** Autonomie **estimée à 1,2 à 1,5 an** avec Apple Home, à partir d'une mesure de la puce elle-même ([docs/02-energie.md §2 quater](docs/02-energie.md)). La CR2450 fait Ø 24,5 × 5,0 mm et rentre sans problème dans le format du Hue (c'est la pile du Hue Dimmer Switch) : tu gardes l'apparence.
+**Configuration retenue : ESP32-H2 + CR2450.** Autonomie **estimée de l'ordre de 1,2 à 1,5 an** avec Apple Home, à partir d'une mesure de la puce elle-même. C'est une estimation optimiste à confirmer au PPK2 ([docs/02-energie.md §2 quater](docs/02-energie.md)). La CR2450 fait Ø 24,5 × 5,0 mm et rentre sans problème dans le format du Hue (c'est la pile du Hue Dimmer Switch) : tu gardes l'apparence.
 
 Pourquoi l'H2 plutôt que le C6 (détail dans [docs/02-energie.md](docs/02-energie.md)) :
 

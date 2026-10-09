@@ -67,7 +67,7 @@ class Usage:
 
 SOCS = [
     Soc("ESP32-C6", 45.0, 5.0, 5.5, 8.5, "CIBLE — mesuré 37-50 µA, sensible à VDD"),
-    Soc("ESP32-H2", 28.0, 0.11, 0.11, 8.0, "veille : PPK2 communauté ; réveil : PM_PROFILING 09/10/2026"),
+    Soc("ESP32-H2", 28.0, 5.0, 5.0, 8.0, "ajustement sur mesure publiée (probablement pessimiste, voir SIT)"),
     Soc("ESP32-H21", 9.0, 4.0, 4.0, 6.5, "datasheet, dispo à confirmer"),
     Soc("nRF54L15", 1.5, 1.5, 1.5, 2.5, "référence hors-ESP32"),
 ]
@@ -172,8 +172,9 @@ def main() -> None:
     print("SANS CLIENT ICD ENREGISTRÉ (Apple Home, constaté le 05/10/2026)")
     print("L'appareil reste en SIT. Mesuré sur la SuperMini le 09/10/2026 avec")
     print("CONFIG_APP_POWER_STATS : un réveil toutes les 7,7 s en moyenne, 5,5 ms")
-    print("éveillé par réveil. Le courant pendant l'éveil est SUPPOSÉ (20 mA) : la")
-    print("fourchette ±30 % couvre 14 à 26 mA.")
+    print("éveillé par réveil. BORNE BASSE : le temps compté en « veille » par ESP-IDF")
+    print("inclut les transitions d'entrée et de sortie de veille. Courant pendant")
+    print("l'éveil SUPPOSÉ (20 mA, fourchette ±30 %) ; plancher supposé (28 µA).")
     print("-" * 76)
     h2 = SOCS[1]
     for label, wake_mc in (("bas", 0.077), ("estimé", 0.11), ("haut", 0.143)):

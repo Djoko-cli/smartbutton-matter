@@ -74,7 +74,7 @@ I_moyen = I_veille
 
 **`E_poll` ≈ 5 mC par réveil.** Dérivé d'une mesure publiée : 11,47 mC/min sur ESP32-H2 en ICD LIT avec `slow poll = 30 s` (2 réveils/min), moins le plancher de 28 µA. Ce n'est pas la transmission qui coûte — c'est le réveil lui-même : sortie du light sleep, réinitialisation du flash, remise en route de la PHY.
 
-> Ces énergies par réveil sont un **ajustement empirique** sur deux mesures publiées, pas une décomposition physique. Le modèle les reproduit (à `slow poll = 30 s` il prédit 198 µA pour le H2 contre 191 mesurés, et 232 µA pour le C6 contre 231), mais il ne prétend pas séparer finement radio / CPU / flash. À remplacer par tes propres mesures.
+> Ces énergies par réveil sont un **ajustement empirique** sur deux mesures publiées, pas une décomposition physique. Le modèle les reproduit (à `slow poll = 30 s` il prédit 198 µA pour le H2 contre 191 mesurés, et 232 µA pour le C6 contre 231), mais il ne prétend pas séparer finement radio / CPU / flash. À remplacer par tes propres mesures. La mesure faite par la puce elle-même le 09/10/2026 (§2 quater) donne au moins ~0,11 mC par réveil : l'ajustement à 5 mC est donc très probablement pessimiste, mais il est conservé ici tant qu'aucune mesure au PPK2 ne le remplace.
 
 **`E_appui` ≈ 8 mC.** Réveil + poll + émission des événements + fenêtre active. Les 3 événements d'un triple-clic tiennent dans une seule fenêtre → un multi-clic ne coûte pas plus qu'un simple clic.
 
@@ -135,11 +135,16 @@ Faute de PPK2, mesure par la puce elle-même : `CONFIG_APP_POWER_STATS` relit le
 | 10 à 15 min | **99,93 %** | **39** | **5,7 ms** |
 
 Ce qu'on en tire :
-- **Un réveil coûte ~0,11 mC** (5,5 ms × 20 mA supposés). L'hypothèse pessimiste de 5 mC, tirée d'une mesure publiée, est **écartée** : on est ~45 fois en dessous.
+- **Un réveil coûte au moins ~0,11 mC** (5,5 ms × 20 mA supposés). C'est une **borne basse** : ESP-IDF compte comme « veille » tout le temps où aucun verrou de gestion d'énergie n'est tenu, y compris l'entrée et la sortie du light sleep, les attentes trop courtes pour dormir et les tentatives refusées, des phases où la puce consomme des milliampères. Elle reste très loin des 5 mC du scénario pessimiste, qui venait sans doute d'un montage non comparable (carte de dev non modifiée, autre configuration).
 - **Un réveil toutes les 7,7 s**, alors que le poll Thread est à 15 s : il y a environ un réveil de plus par poll, d'origine à identifier.
-- **Autonomie estimée en SIT (Apple) : 1,2 à 1,5 an sur CR2450**, et 2,5 à 3 ans sur 2×AAA lithium (`python3 tools/power_budget.py`).
+- **Autonomie estimée en SIT (Apple) : de l'ordre de 1,2 à 1,5 an sur CR2450**, plutôt vers le bas de la fourchette vu la borne basse, et 2,5 à 3 ans sur 2×AAA lithium (`python3 tools/power_budget.py`).
 
-Limites : la **durée** d'éveil est mesurée, mais le **courant** pendant l'éveil (20 mA) et le **plancher** de veille (28 µA) restent des hypothèses. Le PPK2 les remplacera.
+Limites :
+- la **durée** d'éveil est mesurée mais **sous-estimée**, puisque les transitions de veille ne sont pas comptées ;
+- le **courant** pendant l'éveil (20 mA) est supposé ; la fourchette de 1,2 à 1,5 an ne couvre que ±30 % sur ce seul paramètre ;
+- le **plancher** de veille (28 µA, mesure publiée) est supposé lui aussi, alors qu'il pèse ~60 % du total ; il n'entre pas dans la fourchette.
+
+Le PPK2 remplacera ces trois hypothèses. Les tableaux en mode LIT plus haut gardent l'ancien ajustement (5 mC par réveil) : ils ne seront recalculés qu'avec une vraie mesure.
 
 ## 3. Ce qui va réellement tuer ton budget (par ordre de gravité)
 

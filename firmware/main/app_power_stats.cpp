@@ -63,7 +63,8 @@ static bool take_snapshot(pm_snapshot *out)
 
     bool got_uptime = false, got_sleep = false, got_counts = false;
     *out = {};
-    for (char *line = strtok(buf, "\n"); line != nullptr; line = strtok(nullptr, "\n")) {
+    char *save = nullptr;
+    for (char *line = strtok_r(buf, "\n", &save); line != nullptr; line = strtok_r(nullptr, "\n", &save)) {
         long long v = 0;
         unsigned long c = 0, r = 0;
         if (sscanf(line, "Time since bootup: %lld us", &v) == 1) {
