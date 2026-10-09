@@ -19,7 +19,7 @@ Ce qui est atteignable :
 > Ces chiffres supposent le **child timeout Thread relevé à 3600 s** (§2 bis).
 > Sans ce réglage, retirer ~25 % : le C6 tombe à ~10 mois sur CR2450.
 >
-> ⚠️ **Ils supposent aussi le mode ICD LIT, qu'Apple Home n'active pas** (constaté le 05/10/2026, §2 ter). Avec Apple, l'appareil reste en SIT, et l'autonomie dépend du coût réel d'un poll, pas encore mesuré : entre ~2 et ~11 mois sur CR2450.
+> ⚠️ **Ils supposent aussi le mode ICD LIT, qu'Apple Home n'active pas** (constaté le 05/10/2026, §2 ter). Avec Apple, l'appareil reste en SIT. Coût d'un réveil mesuré par la puce le 09/10/2026 (§2 quater) : **1,2 à 1,5 an sur CR2450** pour l'ESP32-H2.
 
 ---
 
@@ -123,6 +123,23 @@ Conséquence sur l'autonomie (H2 + CR2450, poll 15 s) :
 | 0,5 mC | 67 µA | ~11 mois |
 
 **Le coût réel d'un poll sur H2 devient la donnée décisive**, et il n'est pas mesuré. Une puce comme l'EFR32 fait un poll pour ~0,1 à 0,2 mC, ce qui explique qu'un bouton du commerce tienne un an en SIT. La mesure au PPK2 remonte donc en priorité.
+
+## 2 quater. Mesure du 09/10/2026 : le coût réel d'un réveil sur l'H2
+
+Faute de PPK2, mesure par la puce elle-même : `CONFIG_APP_POWER_STATS` relit les compteurs de gestion d'énergie d'ESP-IDF (`PM_PROFILING`). Conditions : SuperMini H2, profil `sleepy`, appairée dans Apple Home, donc en SIT, oscillateur RC interne, aucun appui, fenêtres de 5 min.
+
+| Fenêtre | En veille | Réveils | Éveillé par réveil |
+|---|---|---|---|
+| 0 à 5 min (démarrage, reprise des abonnements) | 99,08 % | 83 | 33,3 ms |
+| 5 à 10 min | **99,93 %** | **39** | **5,3 ms** |
+| 10 à 15 min | **99,93 %** | **39** | **5,7 ms** |
+
+Ce qu'on en tire :
+- **Un réveil coûte ~0,11 mC** (5,5 ms × 20 mA supposés). L'hypothèse pessimiste de 5 mC, tirée d'une mesure publiée, est **écartée** : on est ~45 fois en dessous.
+- **Un réveil toutes les 7,7 s**, alors que le poll Thread est à 15 s : il y a environ un réveil de plus par poll, d'origine à identifier.
+- **Autonomie estimée en SIT (Apple) : 1,2 à 1,5 an sur CR2450**, et 2,5 à 3 ans sur 2×AAA lithium (`python3 tools/power_budget.py`).
+
+Limites : la **durée** d'éveil est mesurée, mais le **courant** pendant l'éveil (20 mA) et le **plancher** de veille (28 µA) restent des hypothèses. Le PPK2 les remplacera.
 
 ## 3. Ce qui va réellement tuer ton budget (par ordre de gravité)
 

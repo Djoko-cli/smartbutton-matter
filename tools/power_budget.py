@@ -67,7 +67,7 @@ class Usage:
 
 SOCS = [
     Soc("ESP32-C6", 45.0, 5.0, 5.5, 8.5, "CIBLE — mesuré 37-50 µA, sensible à VDD"),
-    Soc("ESP32-H2", 28.0, 5.0, 5.0, 8.0, "mesuré (PPK2, communauté)"),
+    Soc("ESP32-H2", 28.0, 0.11, 0.11, 8.0, "veille : PPK2 communauté ; réveil : PM_PROFILING 09/10/2026"),
     Soc("ESP32-H21", 9.0, 4.0, 4.0, 6.5, "datasheet, dispo à confirmer"),
     Soc("nRF54L15", 1.5, 1.5, 1.5, 2.5, "référence hors-ESP32"),
 ]
@@ -169,19 +169,20 @@ def main() -> None:
               f"{parts['TOTAL']:6.2f} µA")
 
     print()
-    print("SANS CLIENT ICD ENREGISTRÉ (cas Apple Home constaté le 05/10/2026)")
-    print("L'appareil reste en SIT : CHIP plafonne le slow poll à 15 s, quelle")
-    print("que soit la config. Le coût réel d'un poll sur H2 n'est pas mesuré :")
-    print("5 mC est l'ajustement sur mesure publiée, 0,5 mC une hypothèse basse.")
+    print("SANS CLIENT ICD ENREGISTRÉ (Apple Home, constaté le 05/10/2026)")
+    print("L'appareil reste en SIT. Mesuré sur la SuperMini le 09/10/2026 avec")
+    print("CONFIG_APP_POWER_STATS : un réveil toutes les 7,7 s en moyenne, 5,5 ms")
+    print("éveillé par réveil. Le courant pendant l'éveil est SUPPOSÉ (20 mA) : la")
+    print("fourchette ±30 % couvre 14 à 26 mA.")
     print("-" * 76)
     h2 = SOCS[1]
-    for poll_mc in (5.0, 2.0, 0.5):
-        soc = Soc(h2.name, h2.sleep_ua, poll_mc, h2.checkin_mc, h2.press_mc)
-        u = Usage(child_timeout_s=3600, slow_poll_s=15)
-        parts = average_current_ua(soc, ref_bat, u)
-        print(f"  {soc.name} + {ref_bat.name}, poll 15 s à {poll_mc:.1f} mC → "
-              f"{parts['TOTAL']:6.1f} µA   {fmt_life(life_years(soc, ref_bat, u)):>10}")
-
+    for label, wake_mc in (("bas", 0.077), ("estimé", 0.11), ("haut", 0.143)):
+        soc = Soc(h2.name, h2.sleep_ua, wake_mc, 0.0, h2.press_mc)
+        u = Usage(child_timeout_s=3600, slow_poll_s=7.7, checkin_period_s=1e9)
+        for bat in (BATTERIES[1], BATTERIES[3]):
+            parts = average_current_ua(soc, bat, u)
+            print(f"  {label:<7} {wake_mc:.3f} mC/réveil, {bat.name:<15} → "
+                  f"{parts['TOTAL']:6.1f} µA   {fmt_life(life_years(soc, bat, u)):>10}")
     print()
     print("Hypothèses par SoC :")
     for soc in SOCS:
