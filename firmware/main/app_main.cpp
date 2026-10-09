@@ -283,5 +283,10 @@ extern "C" void app_main()
         ESP_LOGE(TAG, "mesure de pile indisponible : %s", esp_err_to_name(bat_err));
     }
 
+    esp_err_t stats_err = app_power_stats_init();
+    if (stats_err != ESP_OK) {
+        ESP_LOGW(TAG, "statistiques d'énergie indisponibles : %s", esp_err_to_name(stats_err));
+    }
+
     ESP_LOGI(TAG, "prêt");
 }

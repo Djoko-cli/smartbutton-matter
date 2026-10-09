@@ -80,4 +80,40 @@ menu "SmartButton"
 
     endmenu
 
+    menu "Statistiques d'énergie"
+
+        config APP_POWER_STATS
+            bool "Journaliser périodiquement le temps éveillé et les réveils"
+            depends on PM_ENABLE
+            select PM_PROFILING
+            default n
+            help
+                Lit les compteurs de gestion d'énergie d'ESP-IDF (PM_PROFILING) et
+                écrit une ligne de synthèse : part du temps en veille, nombre de
+                réveils, temps éveillé moyen par réveil, et une ESTIMATION de la
+                charge par réveil et du courant moyen. Faute de PPK2, c'est la
+                meilleure approximation disponible. À couper pour une vraie mesure.
+
+        config APP_POWER_STATS_PERIOD_S
+            int "Période de synthèse (s)"
+            depends on APP_POWER_STATS
+            range 30 3600
+            default 300
+
+        config APP_POWER_STATS_ACTIVE_UA
+            int "Courant de référence éveillé (µA) pour l'estimation"
+            depends on APP_POWER_STATS
+            default 20000
+            help
+                Ordre de grandeur pour l'ESP32-H2 éveillé (CPU à 96 MHz, radio en
+                réception) : 15 à 30 mA selon l'activité. À remplacer par une
+                mesure dès que possible.
+
+        config APP_POWER_STATS_SLEEP_UA
+            int "Courant de référence en light sleep (µA) pour l'estimation"
+            depends on APP_POWER_STATS
+            default 28
+
+    endmenu
+
 endmenu

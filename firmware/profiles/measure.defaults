@@ -22,3 +22,7 @@ CONFIG_USJ_ENABLE_USB_SERIAL_JTAG=n
 # --- Pas de LED -----------------------------------------------------------
 # La WS2812 en blanc fixe tire ~4 mA : 100 fois le budget de veille.
 CONFIG_APP_LED_NONE=y
+
+# --- Pas de statistiques d'énergie ----------------------------------------
+# Elles réveillent la puce toutes les 5 min et n'ont nulle part où écrire.
+CONFIG_APP_POWER_STATS=n

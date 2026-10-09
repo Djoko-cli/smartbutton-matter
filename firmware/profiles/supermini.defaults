@@ -28,3 +28,7 @@ CONFIG_APP_LED_GPIO=8
 # CONFIG_USJ_NO_AUTO_LS_ON_CONNECTION a été essayée le 08/10/2026 et ne marche
 # pas ici : après la première veille, chaque réveil est trop bref pour que le
 # Mac réénumère la carte, donc elle ne voit jamais d'hôte USB et se rendort.
+
+# Statistiques d'énergie : synthèse toutes les 5 min (temps éveillé, réveils,
+# estimation de charge). Sans effet en profil dev (pas de gestion d'énergie).
+CONFIG_APP_POWER_STATS=y

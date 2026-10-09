@@ -73,6 +73,10 @@ esp_err_t app_button_init(void);
  * Source de l'endpoint donné. À appeler après esp_matter::start(). */
 esp_err_t app_battery_init(uint16_t endpoint_id);
 
+/* Statistiques d'énergie (app_power_stats.cpp) : synthèse périodique du
+ * temps éveillé et des réveils. Sans effet si CONFIG_APP_POWER_STATS=n. */
+esp_err_t app_power_stats_init(void);
+
 /* LED (app_led.cpp). app_led_blink est sans effet hors LED simple. */
 esp_err_t app_led_init(void);
 void app_led_blink(uint32_t on_ms);
